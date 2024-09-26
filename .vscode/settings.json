@@ -17,6 +17,9 @@
         "sample_usbd.h": "c",
         "nrf.h": "c",
         "nrfx_gpiote.h": "c",
-        "nrf_gpio.h": "c"
+        "nrf_gpio.h": "c",
+        "gpio.h": "c",
+        "flash_map.h": "c",
+        "flash.h": "c"
     }
 }
