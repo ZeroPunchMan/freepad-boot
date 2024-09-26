@@ -3,13 +3,13 @@
 
 #include "usb_agent.h"
 
-int JumpToApp(void)
+void JumpToApp(void)
 {
 	uint32_t address = 0x25800;
 
 #if CONFIG_ARCH_HAS_USERSPACE
 	__ASSERT(!(CONTROL_nPRIV_Msk & __get_CONTROL()),
-			 "Not in Privileged mode"); //跳转前需要在特权模式,CONFIG_USERSPACE=y使得线程在非特权模式(用户态)下跑
+			 "Not in Privileged mode"); // 跳转前需要在特权模式,CONFIG_USERSPACE=y使得线程在非特权模式(用户态)下跑
 #endif
 
 	// uninit_used_peripherals();
@@ -63,16 +63,37 @@ int JumpToApp(void)
 	/* Call reset handler. */
 	((void (*)(void))vector_table[1])();
 	CODE_UNREACHABLE;
+}
+
+#include "hal/nrf_gpio.h"
+
+int DfuCheck(void)
+{
+	// todo 按键电平
+	nrf_gpio_cfg_input(NRF_GPIO_PIN_MAP(0, 11), NRF_GPIO_PIN_PULLUP);
+
+	//这里需要延时判断,gpio寄生电容导致电压上升慢
+	volatile bool dfu = true;
+	for (int i = 0; i < 200; i++)
+	{
+		if (nrf_gpio_pin_read(NRF_GPIO_PIN_MAP(0, 11)) == 1)
+		{
+			dfu = false;
+			break;
+		}
+	}
+
+	if (!dfu)
+	{
+		JumpToApp();
+	}
+
 	return 0;
 }
 
-#define LED0_NODE DT_ALIAS(led0)
-static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 
 void Thread_Dfu(void)
 {
-	JumpToApp();
-
 	while (true)
 	{
 		uint8_t buff[64];
@@ -84,6 +105,8 @@ void Thread_Dfu(void)
 	}
 }
 
+#define LED0_NODE DT_ALIAS(led0)
+static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 void Thread_Blink(void)
 {
 	int ret;
@@ -119,4 +142,4 @@ K_THREAD_DEFINE(blink_id, STACKSIZE, Thread_Blink, NULL, NULL, NULL,
 K_THREAD_DEFINE(dfu_id, STACKSIZE, Thread_Dfu, NULL, NULL, NULL,
 				2, 0, 0);
 
-SYS_INIT(JumpToApp, EARLY, 1);
+SYS_INIT(DfuCheck, EARLY, 1);
