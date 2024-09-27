@@ -72,7 +72,7 @@ int DfuCheck(void)
 	// todo 按键电平
 	nrf_gpio_cfg_input(NRF_GPIO_PIN_MAP(0, 11), NRF_GPIO_PIN_PULLUP);
 
-	//这里需要延时判断,gpio寄生电容导致电压上升慢
+	// 这里需要延时判断,gpio寄生电容导致电压上升慢
 	volatile bool dfu = true;
 	for (int i = 0; i < 200; i++)
 	{
@@ -91,17 +91,20 @@ int DfuCheck(void)
 	return 0;
 }
 
+#include "comm.h"
+#include "cl_event_system.h"
+#include "dfu.h"
 
 void Thread_Dfu(void)
 {
+	CL_EventSysInit();
+
+	Comm_Init();
+	Dfu_Init();
 	while (true)
 	{
-		uint8_t buff[64];
-		uint32_t recvLen = RecvData(buff, sizeof(buff));
-		if (recvLen)
-		{
-			SendData(buff, recvLen);
-		}
+		Comm_Process();
+		Dfu_Process();
 	}
 }
 

@@ -9,7 +9,12 @@
         "**/CVS": true,
         "**/.DS_Store": true,
         "**/Thumbs.db": true,
-        // "build": true,
+        "common/clib/.vscode": true,
+        "common/clib/mcu_testcase": true,
+        "common/clib/testcase": true,
+        "common/clib/.gitignore": true,
+        "common/clib/Makefile": true,
+        "common/mmlib/testcase": true,
     },
     "files.associations": {
         "ring_buffer.h": "c",
@@ -20,6 +25,16 @@
         "nrf_gpio.h": "c",
         "gpio.h": "c",
         "flash_map.h": "c",
-        "flash.h": "c"
+        "flash.h": "c",
+        "firmware_info.h": "c",
+        "cl_common.h": "c",
+        "cl_event_system.h": "c",
+        "clib_config.h": "c",
+        "mmlib_config.h": "c",
+        "sgp_protocol.h": "c",
+        "cl_serialize.h": "c",
+        "nrf_nvmc.h": "c",
+        "dfu_nrf.h": "c",
+        "dfu_nrf52.h": "c"
     }
 }

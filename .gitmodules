@@ -1,0 +1,6 @@
+[submodule "common/clib"]
+	path = common/clib
+	url = https://github.com/ZeroPunchMan/clib.git
+[submodule "common/mmlib"]
+	path = common/mmlib
+	url = https://github.com/ZeroPunchMan/mmlib.git
