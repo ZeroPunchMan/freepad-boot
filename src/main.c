@@ -111,6 +111,7 @@ void Thread_Dfu(void)
 	}
 }
 
+#include <zephyr/console/console.h>
 #define LED0_NODE DT_ALIAS(led0)
 static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 void Thread_Blink(void)
@@ -137,6 +138,7 @@ void Thread_Blink(void)
 		}
 
 		k_msleep(2000);
+		printk("blink");
 	}
 	return;
 }

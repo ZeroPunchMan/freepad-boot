@@ -35,6 +35,8 @@
         "cl_serialize.h": "c",
         "nrf_nvmc.h": "c",
         "dfu_nrf.h": "c",
-        "dfu_nrf52.h": "c"
+        "dfu_nrf52.h": "c",
+        "crypto_extra.h": "c",
+        "crypto.h": "c"
     }
 }

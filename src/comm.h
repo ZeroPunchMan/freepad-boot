@@ -11,3 +11,4 @@ static inline CL_Result_t Comm_SendMsg(SpgCmd_t cmd, SgpSubCmd_t subCmd, const u
 {
     return SgpProtocol_SendMsg(SpgChannelHandle_Acm, (uint8_t)cmd, (uint8_t)subCmd, data, length);
 }
+
