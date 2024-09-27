@@ -277,7 +277,7 @@ CL_Result_t VerifyApp(const SgpPacket_t *pack)
     if (pack->length != 64)
         return CL_ResFailed;
 
-    return SingCheck((const uint8_t *)APP_START_ADDR, dfuContext.recvSize, (const uint8_t *)pack->data, pack->length);
+    return SignCheck((const uint8_t *)APP_START_ADDR, dfuContext.recvSize, (const uint8_t *)pack->data, pack->length);
 }
 
 static void OnRecvDfuVerify(const SgpPacket_t *pack)

@@ -98,7 +98,7 @@ void SignCheck_Init(void)
     }
 }
 
-CL_Result_t SingCheck(const uint8_t *data, uint32_t dataSize, const uint8_t *sign, uint32_t signSize)
+CL_Result_t SignCheck(const uint8_t *data, uint32_t dataSize, const uint8_t *sign, uint32_t signSize)
 {
     if(import_ecdsa_pub_key()!= CL_ResSuccess)
         return CL_ResFailed;
