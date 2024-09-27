@@ -3,9 +3,10 @@
 
 #include "usb_agent.h"
 
+#include "flash_layout.h"
 void JumpToApp(void)
 {
-	uint32_t address = 0x25800;
+	uint32_t address = APP_START_ADDR;
 
 #if CONFIG_ARCH_HAS_USERSPACE
 	__ASSERT(!(CONTROL_nPRIV_Msk & __get_CONTROL()),
@@ -67,6 +68,7 @@ void JumpToApp(void)
 
 #include "hal/nrf_gpio.h"
 
+#include "dfu_nrf52.h"
 int DfuCheck(void)
 {
 	// todo 按键电平
@@ -83,7 +85,8 @@ int DfuCheck(void)
 		}
 	}
 
-	if (!dfu)
+	// if (!dfu)
+	if (!dfu && IsAppValid())
 	{
 		JumpToApp();
 	}
@@ -133,7 +136,7 @@ void Thread_Blink(void)
 			return;
 		}
 
-		k_msleep(1000);
+		k_msleep(2000);
 	}
 	return;
 }

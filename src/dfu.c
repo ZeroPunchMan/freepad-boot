@@ -191,16 +191,17 @@ static void OnRecvBootVerReq(void)
 
 static void OnRecvAppVerReq(void)
 {
-    const FirmwareInfo_t *pAppInfo = (const FirmwareInfo_t *)0x8013800;
-    uint8_t data[14];
-    memcpy(data, PRODUCT_APP_STR, 10);
-    data[10] = pAppInfo->verMajor;
-    data[11] = pAppInfo->verMinor;
-    CL_Uint16ToBytes(pAppInfo->verPatch, data + 12, CL_BigEndian);
+    //todo
+    // const FirmwareInfo_t *pAppInfo = (const FirmwareInfo_t *)0x8013800;
+    // uint8_t data[14];
+    // memcpy(data, PRODUCT_APP_STR, 10);
+    // data[10] = pAppInfo->verMajor;
+    // data[11] = pAppInfo->verMinor;
+    // CL_Uint16ToBytes(pAppInfo->verPatch, data + 12, CL_BigEndian);
 
-    Comm_SendMsg(SpgCmd_Dfu, SgpSubCmd_AppVerRsp, data, sizeof(data));
+    // Comm_SendMsg(SpgCmd_Dfu, SgpSubCmd_AppVerRsp, data, sizeof(data));
 
-    CL_LOG_INFO("send boot version");
+    // CL_LOG_INFO("send app version");
 }
 
 void OnRecvDfuRequest(const SgpPacket_t *pack)
