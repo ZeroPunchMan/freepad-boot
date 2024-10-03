@@ -96,8 +96,6 @@ static void ToError(void)
 
 void Dfu_Init(void)
 {
-    SignCheck_Init();
-
     CL_EventSysAddListener(OnRecvSgpMsg, CL_Event_SgpRecvMsg, 0);
     ToIdle();
 }

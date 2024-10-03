@@ -67,7 +67,7 @@ CL_Result_t CalcHash(const uint8_t *msg, uint32_t len)
     if (status != PSA_SUCCESS)
     {
         Dfu_SendTest("Failed to begin hash");
-        return CL_ResFailed;
+        goto error;
     }
 
     uint32_t offset = 0;
@@ -84,7 +84,7 @@ CL_Result_t CalcHash(const uint8_t *msg, uint32_t len)
         if (status != PSA_SUCCESS)
         {
             Dfu_SendTest("Failed to update hash");
-            return CL_ResFailed;
+            goto error;
         }
 
         offset += seg;
@@ -96,11 +96,15 @@ CL_Result_t CalcHash(const uint8_t *msg, uint32_t len)
     if (status != PSA_SUCCESS)
     {
         Dfu_SendTest("Failed to finish hash\n");
-        return CL_ResFailed;
+        goto error;
     }
 
     psa_hash_abort(&psaOp);
     return CL_ResSuccess;
+
+error:
+    psa_hash_abort(&psaOp);
+    return CL_ResFailed;
 }
 
 CL_Result_t verify_message(const uint8_t *sig, uint32_t sig_len)
@@ -123,34 +127,30 @@ CL_Result_t verify_message(const uint8_t *sig, uint32_t sig_len)
 
 CL_Result_t crypto_finish(void)
 {
-    psa_status_t status;
-
-    status = psa_destroy_key(pub_key_id);
-    if (status != PSA_SUCCESS)
-        return CL_ResFailed;
+    psa_destroy_key(pub_key_id);
 
     mbedtls_psa_crypto_free();
 
     return CL_ResSuccess;
 }
 
-void SignCheck_Init(void)
-{
-    if (crypto_init() != CL_ResSuccess)
-    { // todo error
-    }
-}
-
 CL_Result_t SignCheck(const uint8_t *data, uint32_t dataSize, const uint8_t *sign, uint32_t signSize)
 {
+    if (crypto_init() != CL_ResSuccess)
+        goto error;
+
     if (import_ecdsa_pub_key() != CL_ResSuccess)
-        return CL_ResFailed;
+        goto error;
 
     if (CalcHash(data, dataSize) != CL_ResSuccess)
-        return CL_ResFailed;
+        goto error;
 
     CL_Result_t res = verify_message(sign, signSize);
 
     crypto_finish();
     return res;
+
+error:
+    crypto_finish();
+    return CL_ResFailed;
 }
