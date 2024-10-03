@@ -21,5 +21,6 @@ typedef enum
     SgpSubCmd_DfuBootVerRsp = 0x73 | 0x80,
     SgpSubCmd_AppVerRsp = 0x74 | 0x80,
 
+    SgpSubCmd_DfuTest = 0x7e | 0x80,
     SgpSubCmd_DfuError = 0x7f | 0x80,
 } SgpSubCmd_t;

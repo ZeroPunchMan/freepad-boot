@@ -147,7 +147,7 @@ void Thread_Blink(void)
 K_THREAD_DEFINE(blink_id, STACKSIZE, Thread_Blink, NULL, NULL, NULL,
 				1, 0, 0);
 
-K_THREAD_DEFINE(dfu_id, STACKSIZE, Thread_Dfu, NULL, NULL, NULL,
+K_THREAD_DEFINE(dfu_id, 40960, Thread_Dfu, NULL, NULL, NULL,
 				2, 0, 0);
 
 SYS_INIT(DfuCheck, EARLY, 1);

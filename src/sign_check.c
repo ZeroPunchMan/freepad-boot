@@ -2,8 +2,10 @@
 
 #include <psa/crypto.h>
 #include <psa/crypto_extra.h>
+#include "dfu.h"
 
 const uint8_t m_pub_key[] = {
+    0x04, // 公钥需要加上前缀04
     0x8d, 0x56, 0x39, 0xbb, 0xef, 0x40, 0x55, 0x42,
     0x27, 0xa4, 0xc3, 0x14, 0x2a, 0x07, 0xec, 0xd9,
     0x60, 0xd6, 0xdc, 0xe3, 0x84, 0x26, 0x5f, 0xf0,
@@ -13,6 +15,8 @@ const uint8_t m_pub_key[] = {
     0xa1, 0x2f, 0x2a, 0x29, 0x71, 0x01, 0xfe, 0x8f,
     0x43, 0x16, 0x62, 0xd3, 0x61, 0xa4, 0x5f, 0x92};
 
+static uint8_t m_hash[PSA_HASH_MAX_SIZE]; // sha256 256bits
+
 static psa_key_id_t pub_key_id;
 
 CL_Result_t crypto_init(void)
@@ -21,6 +25,7 @@ CL_Result_t crypto_init(void)
 
     /* Initialize PSA Crypto */
     status = psa_crypto_init();
+    Dfu_SendTest("init %d", status);
     if (status != PSA_SUCCESS)
         return CL_ResFailed;
 
@@ -41,6 +46,7 @@ CL_Result_t import_ecdsa_pub_key(void)
     psa_set_key_bits(&key_attributes, 256);
 
     status = psa_import_key(&key_attributes, m_pub_key, sizeof(m_pub_key), &pub_key_id);
+    Dfu_SendTest("import key %d", status);
     if (status != PSA_SUCCESS)
     {
         return CL_ResFailed;
@@ -52,20 +58,54 @@ CL_Result_t import_ecdsa_pub_key(void)
     return CL_ResSuccess;
 }
 
-CL_Result_t verify_message(const uint8_t *msg, uint32_t len, const uint8_t *sig, uint32_t sig_len)
+CL_Result_t CalcHash(const uint8_t *msg, uint32_t len)
 {
-    static uint8_t m_hash[32]; // sha256 256bits
     psa_status_t status;
+    psa_hash_operation_t psaOp = PSA_HASH_OPERATION_INIT;
+    status = psa_hash_setup(&psaOp, PSA_ALG_SHA_256);
 
-    uint32_t output_len;
-    status = psa_hash_compute(PSA_ALG_SHA_256,
-                              msg,
-                              len,
-                              m_hash,
-                              sizeof(m_hash),
-                              &output_len);
     if (status != PSA_SUCCESS)
+    {
+        Dfu_SendTest("Failed to begin hash");
         return CL_ResFailed;
+    }
+
+    uint32_t offset = 0;
+    uint32_t maxSeg = 60;
+    while (offset < len)
+    {
+        uint32_t seg;
+        if (len - offset > maxSeg)
+            seg = maxSeg;
+        else
+            seg = len - offset;
+
+        status = psa_hash_update(&psaOp, msg + offset, seg);
+        if (status != PSA_SUCCESS)
+        {
+            Dfu_SendTest("Failed to update hash");
+            return CL_ResFailed;
+        }
+
+        offset += seg;
+    }
+
+    uint32_t outputLen;
+    status = psa_hash_finish(&psaOp, m_hash, sizeof(m_hash),
+                             &outputLen);
+    if (status != PSA_SUCCESS)
+    {
+        Dfu_SendTest("Failed to finish hash\n");
+        return CL_ResFailed;
+    }
+
+    psa_hash_abort(&psaOp);
+    return CL_ResSuccess;
+}
+
+CL_Result_t verify_message(const uint8_t *sig, uint32_t sig_len)
+{
+    psa_status_t status;
 
     /* Verify the signature of the hash */
     status = psa_verify_hash(pub_key_id,
@@ -74,6 +114,7 @@ CL_Result_t verify_message(const uint8_t *msg, uint32_t len, const uint8_t *sig,
                              sizeof(m_hash),
                              sig,
                              sig_len); // 64字节
+    Dfu_SendTest("verify %d", status);
     if (status != PSA_SUCCESS)
         return CL_ResFailed;
 
@@ -88,6 +129,8 @@ CL_Result_t crypto_finish(void)
     if (status != PSA_SUCCESS)
         return CL_ResFailed;
 
+    mbedtls_psa_crypto_free();
+
     return CL_ResSuccess;
 }
 
@@ -100,10 +143,13 @@ void SignCheck_Init(void)
 
 CL_Result_t SignCheck(const uint8_t *data, uint32_t dataSize, const uint8_t *sign, uint32_t signSize)
 {
-    if(import_ecdsa_pub_key()!= CL_ResSuccess)
+    if (import_ecdsa_pub_key() != CL_ResSuccess)
         return CL_ResFailed;
 
-    CL_Result_t res = verify_message(data, dataSize, sign, signSize);
+    if (CalcHash(data, dataSize) != CL_ResSuccess)
+        return CL_ResFailed;
+
+    CL_Result_t res = verify_message(sign, signSize);
 
     crypto_finish();
     return res;

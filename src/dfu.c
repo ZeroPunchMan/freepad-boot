@@ -334,3 +334,13 @@ static bool OnRecvSgpMsg(void *eventArg)
 
     return true;
 }
+
+void Dfu_SendTest(const char *format, ...)
+{
+    static char buff[128];
+    va_list args;
+    va_start(args, format);
+    int len = vsprintf(buff, format, args);
+    Comm_SendMsg((uint8_t)SpgCmd_Dfu, (uint8_t)SgpSubCmd_DfuTest, (const uint8_t*)buff, len);
+}
+
